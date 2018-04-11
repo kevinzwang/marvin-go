@@ -12,4 +12,3 @@ clean:
 
 update:
 	git pull
-	go get -u github.com/kevinzwang/marvin-go/errhandler

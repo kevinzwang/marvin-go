@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"./errhandler"
 	"github.com/bwmarrin/discordgo"
-	"github.com/kevinzwang/marvin-go/errhandler"
 	"github.com/olebedev/config"
 )
 
