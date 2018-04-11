@@ -8,46 +8,43 @@ import (
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/kevinzwang/marvin-go/errhandler"
 	"github.com/olebedev/config"
 )
 
 var token string
 
-func init() {
+func main() {
 	b, err := ioutil.ReadFile("config.yaml")
-	if err != nil {
-		fmt.Println("error reading config.yaml,", err)
+	if errhandler.Handle(err, "Error reading config.yaml") {
 		return
 	}
+
 	contents := string(b)
 	cfg, err := config.ParseYaml(contents)
-	if err != nil {
-		fmt.Println("error parsing config.yaml,", err)
+	if errhandler.Handle(err, "Error parsing config.yaml") {
 		return
 	}
-	token, err = cfg.String("token")
-	if err != nil {
-		fmt.Println("error finding token in config.yaml,", err)
-		return
-	}
-}
 
-func main() {
+	token, err = cfg.String("token")
+	if errhandler.Handle(err, "Error finding token in config.yaml") {
+		return
+	}
 
 	discord, err := discordgo.New("Bot " + token)
-	if err != nil {
-		fmt.Println("error creating Discord session,", err)
+	if errhandler.Handle(err, "Error creating Discord session") {
 		return
 	}
+
 	discord.AddHandler(messageCreate)
 
 	err = discord.Open()
-	if err != nil {
-		fmt.Println("error opening connection,", err)
+	if errhandler.Handle(err, "Error opening connection") {
 		return
 	}
 
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
@@ -68,7 +65,10 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 
 func sendMsg(session *discordgo.Session, channelID string, message string) {
 	_, err := session.ChannelMessageSend(channelID, message)
-	if err != nil {
-		fmt.Println("error sending Discord message,", err)
-	}
+	errhandler.Handle(err, "Error sending Discord message")
+}
+
+func connect(session *discordgo.Session, _ *discordgo.Connect) {
+	fmt.Println("=============")
+	fmt.Println("Name: " + session.User("@me"))
 }
