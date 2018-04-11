@@ -37,6 +37,7 @@ func main() {
 	}
 
 	discord.AddHandler(messageCreate)
+	discord.AddHandler(connect)
 
 	err = discord.Open()
 	if errhandler.Handle(err, "Error opening connection") {
@@ -70,5 +71,5 @@ func sendMsg(session *discordgo.Session, channelID string, message string) {
 
 func connect(session *discordgo.Session, _ *discordgo.Connect) {
 	fmt.Println("=============")
-	fmt.Println("Name: " + session.User("@me"))
+	// fmt.Println("Name: " + session.User("@me"))
 }
