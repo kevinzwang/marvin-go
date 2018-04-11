@@ -61,5 +61,9 @@ func sendMsg(session *discordgo.Session, channelID string, message string) {
 
 func connect(session *discordgo.Session, _ *discordgo.Connect) {
 	fmt.Println("=============")
-	// fmt.Println("Name: " + session.User("@me"))
+	usr, _ := session.User("@me")
+	fmt.Printf("Name: %v #%v\n", usr.Username, usr.Discriminator)
+	guilds, _ := session.UserGuilds(100, "", "")
+	fmt.Printf("Servers: %v\n", len(guilds))
+	fmt.Println("=============")
 }

@@ -3,8 +3,13 @@
 to run:
 
 ```
-go get
-go build
+make
+```
+
+to update:
+
+```
+make update
 ```
 
 then run the executable generated
