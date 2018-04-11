@@ -16,33 +16,23 @@ var token string
 
 func main() {
 	b, err := ioutil.ReadFile("config.yaml")
-	if errhandler.Handle(err, "Error reading config.yaml") {
-		return
-	}
+	errhandler.HandleFatal(err, "Error reading config.yaml")
 
 	contents := string(b)
 	cfg, err := config.ParseYaml(contents)
-	if errhandler.Handle(err, "Error parsing config.yaml") {
-		return
-	}
+	errhandler.HandleFatal(err, "Error parsing config.yaml")
 
 	token, err = cfg.String("token")
-	if errhandler.Handle(err, "Error finding token in config.yaml") {
-		return
-	}
+	errhandler.HandleFatal(err, "Error finding token in config.yaml")
 
 	discord, err := discordgo.New("Bot " + token)
-	if errhandler.Handle(err, "Error creating Discord session") {
-		return
-	}
+	errhandler.HandleFatal(err, "Error creating Discord session")
 
 	discord.AddHandler(messageCreate)
 	discord.AddHandler(connect)
 
 	err = discord.Open()
-	if errhandler.Handle(err, "Error opening connection") {
-		return
-	}
+	errhandler.HandleFatal(err, "Error opening connection")
 
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 
