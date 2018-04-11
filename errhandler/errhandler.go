@@ -8,7 +8,7 @@ import (
 func Handle(err error, msg string) bool {
 	if err != nil {
 		fmt.Println("%v - %v", msg, err)
-		return true
+		// return true
 	}
 	return false
 }
