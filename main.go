@@ -42,7 +42,7 @@ func main() {
 
 	commands.Init(&prefix, &ownerID)
 
-	commands.AddCommands(&commands.Ping{}, &commands.Quit{}, &commands.Help{})
+	commands.AddCommands(&commands.Ping{}, &commands.Quit{}, &commands.Help{}, &commands.Info{})
 
 	err = discord.Open()
 	errors.Fatal(err, "Error opening connection")

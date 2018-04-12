@@ -14,3 +14,5 @@ func (cmd *Ping) numArgs() (int, int) { return 0, 0 }
 func (cmd *Ping) names() []string { return []string{"ping"} }
 
 func (cmd *Ping) onlyOwner() bool { return false }
+
+func (cmd *Ping) usage() []string { return []string{""} }

@@ -9,6 +9,7 @@ type Quit struct{}
 
 func (cmd *Quit) execute(ctx *Context, args []string) {
 	ctx.send("Bye!")
+	ctx.Session.Close()
 	os.Exit(0)
 }
 
@@ -21,3 +22,5 @@ func (cmd *Quit) numArgs() (int, int) { return 0, 0 }
 func (cmd *Quit) names() []string { return []string{"quit", "exit"} }
 
 func (cmd *Quit) onlyOwner() bool { return true }
+
+func (cmd *Quit) usage() []string { return []string{""} }

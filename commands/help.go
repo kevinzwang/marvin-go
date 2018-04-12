@@ -12,7 +12,7 @@ func (cmd *Help) execute(ctx *Context, args []string) {
 		if ctx.Guild != nil {
 			ctx.reply(":mailbox_with_mail:")
 		}
-		msg := ""
+		msg := "These are the commands for Marvin, the Chaos server admin bot.\n\nFor more info about a command, do `help <command>`.\n\n"
 		categories = GetCategories()
 		for cat, cmds := range categories {
 			msg += "__" + cat + "__\n"
@@ -20,10 +20,17 @@ func (cmd *Help) execute(ctx *Context, args []string) {
 			for _, c := range cmds {
 				msg += "**"
 				names := c.names()
-				for _, n := range names {
-					msg += n + ", "
+				mainName := names[0]
+				msg += mainName
+				altNames := names[1:]
+				if len(altNames) > 0 {
+					msg += " (aka "
+					for _, n := range altNames {
+						msg += n + ", "
+					}
+					msg = msg[:len(msg)-2]
+					msg += ")"
 				}
-				msg = msg[:len(msg)-2]
 				msg += "** - " + c.description() + "\n"
 			}
 
@@ -42,19 +49,25 @@ func (cmd *Help) execute(ctx *Context, args []string) {
 
 		names := cmdToHelp.names()
 
+		mainName := names[0]
+		altNames := names[1:]
+
 		msg := "**"
-		msg += cmdName
-		if len(names) > 1 {
+		msg += mainName
+		if len(altNames) > 0 {
 			msg += " (aka "
-			for _, n := range names {
-				if n != cmdName {
-					msg += n + ", "
-				}
+			for _, n := range altNames {
+				msg += n + ", "
 			}
 			msg = msg[:len(msg)-2]
 			msg += ")"
 		}
-		msg += "**\n" + cmdToHelp.description()
+		msg += "**\n" + cmdToHelp.description() + "\n\n__Usage__\n"
+
+		usage := cmdToHelp.usage()
+		for _, u := range usage {
+			msg += "\n`" + mainName + " " + u + "`"
+		}
 
 		ctx.send(msg)
 	}
@@ -71,3 +84,5 @@ func (cmd *Help) numArgs() (int, int) { return 0, 1 }
 func (cmd *Help) names() []string { return []string{"help", "halp"} }
 
 func (cmd *Help) onlyOwner() bool { return false }
+
+func (cmd *Help) usage() []string { return []string{"", "<command>"} }

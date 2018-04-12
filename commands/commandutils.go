@@ -23,6 +23,7 @@ type Command interface {
 	numArgs() (int, int)
 	names() []string
 	onlyOwner() bool
+	usage() []string
 }
 
 // Context stores the context of a command
