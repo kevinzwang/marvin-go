@@ -1,18 +1,44 @@
 package errors
 
 import (
-	"log"
+	"fmt"
 	"os"
+	"runtime"
+
+	"github.com/bwmarrin/discordgo"
 )
 
-var (
-	Warning *log.Logger
-	Error   *log.Logger
-	Fatal   *log.Logger
-)
+// Warning displays a warning to stdout
+func Warning(err error, msg string) bool {
+	if err != nil {
+		_, fn, line, _ := runtime.Caller(1)
+		fmt.Printf("[WARNING] %s:%d: %v\n", fn, line, msg)
 
-func init() {
-	Warning = log.New(os.Stdout, "[WARNING] ", log.Ldate|log.Ltime|log.Llongfile)
-	Error = log.New(os.Stdout, "[ERROR] ", log.Ldate|log.Ltime|log.Llongfile)
-	Fatal = log.New(os.Stdout, "[FATAL ERROR] ", log.Ldate|log.Ltime|log.Llongfile)
+		return true
+	}
+	return false
+}
+
+// Error displays an error to stdout
+func Error(err error, msg string) bool {
+	if err != nil {
+		_, fn, line, _ := runtime.Caller(1)
+		fmt.Printf("[ERROR] %s:%d: %v\n", fn, line, msg)
+
+		return true
+	}
+	return false
+}
+
+// Fatal displays an error to stdout and then exits
+func Fatal(err error, msg string, session *discordgo.Session) {
+	if err != nil {
+		_, fn, line, _ := runtime.Caller(1)
+		fmt.Printf("[FATAL ERROR] %s:%d: %v\n", fn, line, msg)
+
+		if session != nil {
+			session.Close()
+		}
+		os.Exit(1)
+	}
 }

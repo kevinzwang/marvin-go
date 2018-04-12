@@ -19,35 +19,23 @@ var ownerID string
 
 func main() {
 	b, err := ioutil.ReadFile("config.yaml")
-	if err != nil {
-		errors.Fatal.Fatal("Could not read config.yaml")
-	}
+	errors.Fatal(err, "Could not read config.yaml", nil)
 
 	contents := string(b)
 	cfg, err := config.ParseYaml(contents)
-	if err != nil {
-		errors.Fatal.Fatal("Could not parse config.yaml")
-	}
+	errors.Fatal(err, "Could not parse config.yaml", nil)
 
 	token, err = cfg.String("token")
-	if err != nil {
-		errors.Fatal.Fatal("Could not find token in config.yaml")
-	}
+	errors.Fatal(err, "Could not find token in config.yaml", nil)
 
 	prefix, err = cfg.String("prefix")
-	if err != nil {
-		errors.Fatal.Fatal("Could not find prefix in config.yaml")
-	}
+	errors.Fatal(err, "Could not find prefix in config.yaml", nil)
 
 	ownerID, err = cfg.String("owner")
-	if err != nil {
-		errors.Warning.Fatal("Could not find owner in config.yaml")
-	}
+	errors.Warning(err, "Could not find owner in config.yaml")
 
 	discord, err := discordgo.New("Bot " + token)
-	if err != nil {
-		errors.Fatal.Fatal("Could not create Discord session")
-	}
+	errors.Fatal(err, "Could not create Discord session", nil)
 
 	discord.AddHandler(messageCreate)
 	discord.AddHandler(connect)
@@ -57,9 +45,7 @@ func main() {
 	commands.AddCommands(&commands.Ping{}, &commands.Quit{}, &commands.Help{}, &commands.Info{}, &commands.Cat{})
 
 	err = discord.Open()
-	if err != nil {
-		errors.Fatal.Fatal("Could not open connection to Discord")
-	}
+	errors.Fatal(err, "Could not open connection to Discord", discord)
 
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 
