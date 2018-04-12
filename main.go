@@ -54,7 +54,7 @@ func main() {
 
 	commands.Init(&prefix, &ownerID)
 
-	commands.AddCommands(&commands.Ping{}, &commands.Quit{}, &commands.Help{}, &commands.Info{})
+	commands.AddCommands(&commands.Ping{}, &commands.Quit{}, &commands.Help{}, &commands.Info{}, &commands.Cat{})
 
 	err = discord.Open()
 	if err != nil {
@@ -77,13 +77,6 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 	}
 
 	commands.Handle(message, session)
-}
-
-func sendMsg(session *discordgo.Session, channelID string, message string) {
-	_, err := session.ChannelMessageSend(channelID, message)
-	if err != nil {
-		errors.Warning("Could not send message to Discord")
-	}
 }
 
 func connect(session *discordgo.Session, _ *discordgo.Connect) {
