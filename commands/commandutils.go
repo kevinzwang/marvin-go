@@ -3,6 +3,7 @@ package commands
 import (
 	"strings"
 
+	"../errors"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -37,12 +38,18 @@ type Context struct {
 // Send messages in discord into the same channel as the command
 func (ctx *Context) send(s string) (msg *discordgo.Message, err error) {
 	msg, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, s)
+	if err != nil {
+		errors.Warning("Could not send message")
+	}
 	return
 }
 
 // Reply is the same as Send, but appends a mention to the user who did the command
 func (ctx *Context) reply(s string) (msg *discordgo.Message, err error) {
 	msg, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Author.Mention()+" "+s)
+	if err != nil {
+		errors.Warning("Could not send message")
+	}
 	return
 }
 

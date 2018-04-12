@@ -38,9 +38,13 @@ func (cmd *Help) execute(ctx *Context, args []string) {
 		}
 
 		usrChannel, err := ctx.Session.UserChannelCreate(ctx.Author.ID)
-		errors.Warning(err, "Error creating user channel")
+		if err != nil {
+			errors.Warning("Could not create user channel")
+		}
 		_, err = ctx.Session.ChannelMessageSend(usrChannel.ID, msg)
-		errors.Warning(err, "Error sending DM")
+		if err != nil {
+			errors.Warning("Could not send message to DM")
+		}
 
 	} else if len(args) == 1 {
 		commands := GetCommands()
