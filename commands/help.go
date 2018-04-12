@@ -49,7 +49,12 @@ func (cmd *Help) execute(ctx *Context, args []string) {
 	} else if len(args) == 1 {
 		commands := GetCommands()
 		cmdName := args[0]
-		cmdToHelp := commands[cmdName]
+		cmdToHelp, ok := commands[cmdName]
+
+		if !ok {
+			ctx.reply("No such command `" + cmdName + "`.")
+			return
+		}
 
 		names := cmdToHelp.names()
 
