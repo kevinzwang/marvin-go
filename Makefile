@@ -1,5 +1,7 @@
 all: update build run
 
+no-update: build run
+
 run:
 	./marvin-go
 
