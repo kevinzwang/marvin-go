@@ -39,7 +39,7 @@ type Context struct {
 func (ctx *Context) send(s string) (msg *discordgo.Message, err error) {
 	msg, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, s)
 	if err != nil {
-		errors.Warning("Could not send message")
+		errors.Warning.Println("Could not send message")
 	}
 	return
 }
@@ -48,7 +48,7 @@ func (ctx *Context) send(s string) (msg *discordgo.Message, err error) {
 func (ctx *Context) reply(s string) (msg *discordgo.Message, err error) {
 	msg, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Author.Mention()+" "+s)
 	if err != nil {
-		errors.Warning("Could not send message")
+		errors.Warning.Println("Could not send message")
 	}
 	return
 }

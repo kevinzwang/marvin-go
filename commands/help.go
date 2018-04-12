@@ -39,11 +39,11 @@ func (cmd *Help) execute(ctx *Context, args []string) {
 
 		usrChannel, err := ctx.Session.UserChannelCreate(ctx.Author.ID)
 		if err != nil {
-			errors.Warning("Could not create user channel")
+			errors.Warning.Println("Could not create user channel")
 		}
 		_, err = ctx.Session.ChannelMessageSend(usrChannel.ID, msg)
 		if err != nil {
-			errors.Warning("Could not send message to DM")
+			errors.Warning.Println("Could not send message to DM")
 		}
 
 	} else if len(args) == 1 {
