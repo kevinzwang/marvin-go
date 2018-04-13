@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"../errors"
+	"../logger"
 )
 
 // Help gives info on all the commands
@@ -38,10 +38,10 @@ func (cmd *Help) execute(ctx *Context, args []string) {
 		}
 
 		usrChannel, err := ctx.Session.UserChannelCreate(ctx.Author.ID)
-		errors.Warning(err, "Could not create user channel")
+		logger.Warning(err, "Could not create user channel")
 
 		_, err = ctx.Session.ChannelMessageSend(usrChannel.ID, msg)
-		errors.Warning(err, "Could not send message to DM")
+		logger.Warning(err, "Could not send message to DM")
 
 	} else if len(args) == 1 {
 		commands := GetCommands()

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"../logger"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -16,7 +17,7 @@ type Anime struct{}
 func (cmd *Anime) execute(ctx *Context, args []string) {
 	query := strings.Join(args, " ")
 	searchResp, err := http.Get("https://api.jikan.moe/search/anime/" + query)
-	if err != nil {
+	if logger.Error(err, "Could not access Jikan API") {
 		ctx.send("Problem searching for anime, please try again.")
 		return
 	}
@@ -26,7 +27,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 	searchBody, err := ioutil.ReadAll(searchResp.Body)
 	var searchParsed map[string]interface{}
 	err = json.Unmarshal(searchBody, &searchParsed)
-	if err != nil {
+	if logger.Error(err, "Could not parse JSON") {
 		ctx.send("Problem parsing JSON, please try again.")
 		return
 	}
@@ -55,7 +56,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 	}
 
 	resultResp, err := http.Get("https://api.jikan.moe/anime/" + strconv.Itoa(int(resultID)))
-	if err != nil {
+	if logger.Error(err, "Could not get anime") {
 		ctx.send("Problem finding anime, please try again.")
 		return
 	}
@@ -63,14 +64,14 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 	defer resultResp.Body.Close()
 
 	resultBody, err := ioutil.ReadAll(resultResp.Body)
-	if err != nil {
+	if logger.Error(err, "Could not parse JSON") {
 		ctx.send("Problem parsing JSON, please try again.")
 		return
 	}
 
 	var resultParsed map[string]interface{}
 	err = json.Unmarshal(resultBody, &resultParsed)
-	if err != nil {
+	if logger.Error(err, "Could not parse JSON") {
 		ctx.send("Problem parsing JSON, please try again.")
 		return
 	}
@@ -79,7 +80,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 
 	em.Thumbnail = &discordgo.MessageEmbedThumbnail{URL: resultParsed["image_url"].(string)}
 	title := resultParsed["title"].(string)
-	if resultParsed["title_english"] != nil {
+	if resultParsed["title_english"] != nil && resultParsed["title_english"].(string) != resultParsed["title"].(string) {
 		title += " (English: " + resultParsed["title_english"].(string) + ")"
 	}
 	em.Title = title

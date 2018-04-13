@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	"./commands"
-	"./errors"
+	"./logger"
 	"github.com/bwmarrin/discordgo"
 	"github.com/olebedev/config"
 )
@@ -19,23 +19,23 @@ var ownerID string
 
 func main() {
 	b, err := ioutil.ReadFile("config.yaml")
-	errors.Fatal(err, "Could not read config.yaml", nil)
+	logger.Fatal(err, "Could not read config.yaml", nil)
 
 	contents := string(b)
 	cfg, err := config.ParseYaml(contents)
-	errors.Fatal(err, "Could not parse config.yaml", nil)
+	logger.Fatal(err, "Could not parse config.yaml", nil)
 
 	token, err = cfg.String("token")
-	errors.Fatal(err, "Could not find token in config.yaml", nil)
+	logger.Fatal(err, "Could not find token in config.yaml", nil)
 
 	prefix, err = cfg.String("prefix")
-	errors.Fatal(err, "Could not find prefix in config.yaml", nil)
+	logger.Fatal(err, "Could not find prefix in config.yaml", nil)
 
 	ownerID, err = cfg.String("owner")
-	errors.Warning(err, "Could not find owner in config.yaml")
+	logger.Warning(err, "Could not find owner in config.yaml")
 
 	discord, err := discordgo.New("Bot " + token)
-	errors.Fatal(err, "Could not create Discord session", nil)
+	logger.Fatal(err, "Could not create Discord session", nil)
 
 	discord.AddHandler(messageCreate)
 	discord.AddHandler(connect)
@@ -46,7 +46,7 @@ func main() {
 		&commands.Cat{}, &commands.Anime{})
 
 	err = discord.Open()
-	errors.Fatal(err, "Could not open connection to Discord", discord)
+	logger.Fatal(err, "Could not open connection to Discord", discord)
 
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 
@@ -76,4 +76,5 @@ func connect(session *discordgo.Session, _ *discordgo.Connect) {
 	fmt.Printf("Servers: %v\n", len(guilds))
 	fmt.Printf("Prefix: %v\n", prefix)
 	fmt.Println("=============")
+	logger.Info("CONNECTED TO DISCORD")
 }
