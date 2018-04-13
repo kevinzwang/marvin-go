@@ -99,9 +99,9 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 	genres := ""
 	genreList := resultParsed["genre"].([]interface{})
 	for _, g := range genreList {
-		genres += "[" + g.(map[string]interface{})["name"].(string) + "](" + g.(map[string]interface{})["url"].(string) + ") | "
+		genres += "[" + g.(map[string]interface{})["name"].(string) + "](" + g.(map[string]interface{})["url"].(string) + ")  |  "
 	}
-	genres = genres[:len(genres)-3]
+	genres = genres[:len(genres)-5]
 
 	em.Fields = []*discordgo.MessageEmbedField{
 		&discordgo.MessageEmbedField{Name: "Episodes", Value: strconv.Itoa(int(resultParsed["episodes"].(float64))), Inline: true},
@@ -112,6 +112,8 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 	}
 
 	em.Footer = &discordgo.MessageEmbedFooter{Text: "Searched using the Jikan API for MyAnimeList.net"}
+
+	em.Color = 0x3053a0
 
 	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, em)
 }
