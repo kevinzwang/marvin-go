@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -64,6 +65,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 	defer resultResp.Body.Close()
 
 	resultBody, err := ioutil.ReadAll(resultResp.Body)
+	resultBody = bytes.Replace(resultBody, []byte("&#039;"), []byte("'"), -1)
 	if logger.Error(err, "Could not parse JSON") {
 		ctx.send("Problem parsing JSON, please try again.")
 		return
