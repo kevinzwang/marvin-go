@@ -115,7 +115,7 @@ func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 				return
 			}
 
-			session.ChannelTyping(msg.ChannelID)
+			go session.ChannelTyping(msg.ChannelID)
 			go cmd.execute(createContext(msg, session), args)
 		}
 	}
