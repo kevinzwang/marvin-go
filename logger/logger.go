@@ -76,10 +76,9 @@ func fprintf(flag string, msg string, err error) {
 	defer w.Flush()
 
 	if err != nil {
-		_, fn, line, _ := runtime.Caller(2)
-		fmt.Fprintf(w, "%s (%s) %s:%d: %v\n\tError: %v\n", flag, time.Now().Format("Mon Jan _2 15:04:05 2006"), fn, line, msg, err)
+		fmt.Fprintf(w, "%s (%s) %v\n\tMessage: %v\n\tTraceback:\n", flag, time.Now().Format("Mon Jan _2 15:04:05 2006"), err, msg)
 
-		count := 3
+		count := 2
 		for {
 			_, fn, line, ok := runtime.Caller(count)
 			if !ok {
