@@ -128,4 +128,4 @@ func (cmd *Anime) names() []string { return []string{"anime"} }
 
 func (cmd *Anime) onlyOwner() bool { return false }
 
-func (cmd *Anime) usage() []string { return []string{""} }
+func (cmd *Anime) usage() []string { return []string{"<Anime Title>"} }

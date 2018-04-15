@@ -91,6 +91,13 @@ func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 		fullCmd = content[len(*prefix):]
 		isCmd = true
 
+	} else if strings.HasPrefix(content, session.State.User.Mention()) {
+		if channel.GuildID == "" {
+			session.ChannelMessageSend(msg.ChannelID, "You don't need to include prefixes in DMs")
+		}
+
+		fullCmd = content[len(session.State.User.Mention()):]
+		isCmd = true
 	} else if channel.GuildID == "" {
 		fullCmd = content
 		isCmd = true
@@ -111,7 +118,7 @@ func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 
 			// if it has a wrong amount of arguments, exit
 			if (len(args) < min && min != -1) || (len(args) > max && max != -1) {
-				session.ChannelMessageSend(msg.ChannelID, "Incorrect number of arguments for command `"+cmdName+"`")
+				session.ChannelMessageSend(msg.ChannelID, "Incorrect number of arguments for command `"+cmdName+"`. Try `!help "+cmdName+"`.")
 				return
 			}
 
