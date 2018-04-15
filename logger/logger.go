@@ -80,11 +80,16 @@ func fprintf(flag string, msg string, err error) {
 
 		count := 2
 		for {
-			_, fn, line, ok := runtime.Caller(count)
+			pc, fn, line, ok := runtime.Caller(count)
 			if !ok {
 				break
 			}
-			fmt.Fprintf(w, "\t\t%s:%d\n", fn, line)
+			details := runtime.FuncForPC(pc)
+			name := ""
+			if details != nil {
+				name = details.Name()
+			}
+			fmt.Fprintf(w, "\t\t%s:%d: %s\n", fn, line, name)
 			count++
 		}
 	} else {
