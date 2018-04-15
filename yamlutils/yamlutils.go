@@ -50,7 +50,7 @@ func Set(toSet interface{}, file string, path ...string) error {
 	file = "config/" + file + ".yaml"
 
 	parsed := new(map[interface{}]interface{})
-	if _, err := os.Stat(file); err != nil {
+	if _, err := os.Stat(file); err == nil {
 		b, err := ioutil.ReadFile(file)
 		if logger.Error(err, "Could not read "+file) {
 			return err
@@ -81,7 +81,7 @@ func Set(toSet interface{}, file string, path ...string) error {
 	}
 	*curr = toSet
 
-	b, err := yaml.Marshal(parsed)
+	b, err := yaml.Marshal(*parsed)
 	if logger.Error(err, "Could not convert data into YAML") {
 		return err
 	}
@@ -98,7 +98,7 @@ func Set(toSet interface{}, file string, path ...string) error {
 func GetToken() string {
 	token, err := Get("config", "token")
 
-	if err != nil {
+	if err != nil || token == nil {
 		token = input("Bot token: ")
 		Set(token, "config", "token")
 	}
@@ -110,7 +110,7 @@ func GetToken() string {
 func GetPrefix() string {
 	prefix, err := Get("config", "prefix")
 
-	if err != nil {
+	if err != nil || prefix == nil {
 		prefix = input("Bot prefix: ")
 		Set(prefix, "config", "prefix")
 	}
@@ -122,7 +122,7 @@ func GetPrefix() string {
 func GetOwnerID() string {
 	owner, err := Get("config", "owner")
 
-	if err != nil {
+	if err != nil || owner == nil {
 		owner = input("Bot owner ID: ")
 		Set(owner, "config", "owner")
 	}
@@ -135,5 +135,5 @@ func input(s string) string {
 	fmt.Print(s)
 	text, err := reader.ReadString('\n')
 	logger.Fatal(err, "Unable to read input from stdin")
-	return text
+	return text[:len(text)-1]
 }
