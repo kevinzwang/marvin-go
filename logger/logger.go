@@ -7,20 +7,19 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
+	"../marvin"
 )
 
 // Info logs info
 func Info(msg string) {
-	fprintf("[INFO]", "", 0, msg, nil)
+	fprintf("[INFO]", msg, nil)
 }
 
 // Warning displays a warning to stdout
 func Warning(err error, msg string) bool {
 	if err != nil {
-		_, fn, line, _ := runtime.Caller(1)
 
-		fprintf("[WARNING]", fn, line, msg, err)
+		fprintf("[WARNING]", msg, err)
 		fmt.Printf("[WARNING] %v\n", msg)
 
 		return true
@@ -31,9 +30,8 @@ func Warning(err error, msg string) bool {
 // Error displays an error to stdout
 func Error(err error, msg string) bool {
 	if err != nil {
-		_, fn, line, _ := runtime.Caller(1)
 
-		fprintf("[ERROR]", fn, line, msg, err)
+		fprintf("[ERROR]", msg, err)
 		fmt.Printf("[ERROR] %v\n", msg)
 
 		return true
@@ -42,22 +40,21 @@ func Error(err error, msg string) bool {
 }
 
 // Fatal displays an error to stdout and then exits
-func Fatal(err error, msg string, session *discordgo.Session) {
+func Fatal(err error, msg string) {
 	if err != nil {
-		_, fn, line, _ := runtime.Caller(1)
 
-		fprintf("[FATAL ERROR]", fn, line, msg, err)
+		fprintf("[FATAL ERROR]", msg, err)
 		fmt.Printf("[FATAL ERROR] %v\n", msg)
 
-		if session != nil {
-			session.Close()
+		if marvin.Session() != nil {
+			marvin.Session().Close()
 		}
 
 		os.Exit(1)
 	}
 }
 
-func fprintf(flag string, fn string, line int, msg string, err error) {
+func fprintf(flag string, msg string, err error) {
 	var f *os.File
 	if _, err := os.Stat("log.txt"); err == nil {
 		f, err = os.OpenFile("log.txt", os.O_APPEND|os.O_WRONLY, 0600)
@@ -73,15 +70,25 @@ func fprintf(flag string, fn string, line int, msg string, err error) {
 		}
 	}
 
-	w := bufio.NewWriter(f)
+	defer f.Close()
 
-	// fmt.Fprintf(w, msg, a)
+	w := bufio.NewWriter(f)
+	defer w.Flush()
+
 	if err != nil {
-		fmt.Fprintf(w, "%s (%s) %s:%d: %v\n%v\n", flag, time.Now().Format("Mon Jan _2 15:04:05 2006"), fn, line, msg, err)
+		_, fn, line, _ := runtime.Caller(2)
+		fmt.Fprintf(w, "%s (%s) %s:%d: %v\n\tError: %v\n", flag, time.Now().Format("Mon Jan _2 15:04:05 2006"), fn, line, msg, err)
+
+		count := 3
+		for {
+			_, fn, line, ok := runtime.Caller(count)
+			if !ok {
+				break
+			}
+			fmt.Fprintf(w, "\t\t%s:%d\n", fn, line)
+			count++
+		}
 	} else {
 		fmt.Fprintf(w, "%s (%s) %v\n", flag, time.Now().Format("Mon Jan _2 15:04:05 2006"), msg)
 	}
-
-	w.Flush()
-	f.Close()
 }
