@@ -2,40 +2,31 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"./commands"
 	"./logger"
+	"./marvin"
+	"./yamlutils"
 	"github.com/bwmarrin/discordgo"
-	"github.com/olebedev/config"
 )
 
 var token string
 var prefix string
 var ownerID string
 
+func init() {
+	logger.Info("SYSTEM START")
+	readConfigs()
+}
+
 func main() {
-	b, err := ioutil.ReadFile("config.yaml")
-	logger.Fatal(err, "Could not read config.yaml", nil)
-
-	contents := string(b)
-	cfg, err := config.ParseYaml(contents)
-	logger.Fatal(err, "Could not parse config.yaml", nil)
-
-	token, err = cfg.String("token")
-	logger.Fatal(err, "Could not find token in config.yaml", nil)
-
-	prefix, err = cfg.String("prefix")
-	logger.Fatal(err, "Could not find prefix in config.yaml", nil)
-
-	ownerID, err = cfg.String("owner")
-	logger.Warning(err, "Could not find owner in config.yaml")
-
 	discord, err := discordgo.New("Bot " + token)
-	logger.Fatal(err, "Could not create Discord session", nil)
+	logger.Fatal(err, "Could not create Discord session")
+
+	marvin.Init(discord)
 
 	discord.AddHandler(messageCreate)
 	discord.AddHandler(connect)
@@ -46,7 +37,7 @@ func main() {
 		&commands.Cat{}, &commands.Anime{})
 
 	err = discord.Open()
-	logger.Fatal(err, "Could not open connection to Discord", discord)
+	logger.Fatal(err, "Could not open connection to Discord")
 
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 
@@ -56,6 +47,12 @@ func main() {
 
 	discord.Close()
 
+}
+
+func readConfigs() {
+	token = yamlutils.GetToken()
+	prefix = yamlutils.GetPrefix()
+	ownerID = yamlutils.GetOwnerID()
 }
 
 func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate) {
