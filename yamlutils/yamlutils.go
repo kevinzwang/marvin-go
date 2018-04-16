@@ -49,7 +49,7 @@ func Get(file string, path ...string) (interface{}, error) {
 func Set(toSet interface{}, file string, path ...string) error {
 	file = "config/" + file + ".yaml"
 
-	parsed := new(map[interface{}]interface{})
+	var parsed map[interface{}]interface{}
 	if _, err := os.Stat(file); err == nil {
 		b, err := ioutil.ReadFile(file)
 		if logger.Error(err, "Could not read "+file) {
@@ -60,28 +60,24 @@ func Set(toSet interface{}, file string, path ...string) error {
 		if logger.Error(err, "Could not parse "+file) {
 			return err
 		}
+	} else {
+		parsed = make(map[interface{}]interface{})
 	}
 
-	curr := new(interface{})
-	*curr = parsed
-	prev := new(map[interface{}]interface{})
-	for i := 0; i < len(path); i++ {
-		currMap, ok := (*curr).(map[interface{}]interface{})
+	curr := &parsed
+	for i := 0; i < len(path)-1; i++ {
+		next, ok := (*curr)[path[i]].(map[interface{}]interface{})
 		if !ok {
-			logger.Warning(errors.New("overwriting yaml object with map"), "Overwriting YAML object with map")
-			currMap = *new(map[interface{}]interface{})
-			*curr = currMap
+			if (*curr)[path[i]] != nil {
+				logger.Warning(errors.New(""), "Overwriting YAML object with map")
+			}
+			next = make(map[interface{}]interface{})
 		}
-
-		*prev = (*curr).(map[interface{}]interface{})
-		*curr, ok = currMap[path[i]]
-		if !ok {
-			*curr = new(map[interface{}]interface{})
-		}
+		curr = &next
 	}
-	*curr = toSet
+	(*curr)[path[len(path)-1]] = toSet
 
-	b, err := yaml.Marshal(*parsed)
+	b, err := yaml.Marshal(parsed)
 	if logger.Error(err, "Could not convert data into YAML") {
 		return err
 	}
