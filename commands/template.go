@@ -5,13 +5,13 @@ type Template struct{}
 
 func (cmd *Template) execute(ctx *Context, args []string) {}
 
-func (cmd *Template) description() string { return "template description" }
+func (cmd *Template) description() string { return "" }
 
 func (cmd *Template) category() string { return "misc" }
 
 func (cmd *Template) numArgs() (int, int) { return -1, -1 }
 
-func (cmd *Template) names() []string { return []string{"template"} }
+func (cmd *Template) names() []string { return []string{"temp"} }
 
 func (cmd *Template) onlyOwner() bool { return false }
 
