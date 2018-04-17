@@ -120,7 +120,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 
 func (cmd *Anime) description() string { return "gives info about the queried anime" }
 
-func (cmd *Anime) category() string { return "misc" }
+func (cmd *Anime) category() string { return "fun" }
 
 func (cmd *Anime) numArgs() (int, int) { return 1, -1 }
 

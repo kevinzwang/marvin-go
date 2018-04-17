@@ -29,7 +29,7 @@ func (cmd *Cat) execute(ctx *Context, args []string) {
 
 func (cmd *Cat) description() string { return "finds a random picture of a cat" }
 
-func (cmd *Cat) category() string { return "misc" }
+func (cmd *Cat) category() string { return "fun" }
 
 func (cmd *Cat) numArgs() (int, int) { return 0, 0 }
 
