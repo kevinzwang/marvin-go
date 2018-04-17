@@ -34,7 +34,7 @@ func main() {
 	commands.Init(&prefix, &ownerID)
 
 	commands.AddCommands(&commands.Ping{}, &commands.Quit{}, &commands.Help{}, &commands.Info{},
-		&commands.Cat{}, &commands.Anime{})
+		&commands.Cat{}, &commands.Anime{}, &commands.Invite{})
 
 	err = discord.Open()
 	logger.Fatal(err, "Could not open connection to Discord")
