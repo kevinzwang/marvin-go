@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -36,6 +37,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 	searchResults, ok := searchParsed["result"].([]interface{})
 	if !ok {
 		ctx.send("Problem parsing JSON, please try again.")
+		logger.Error(errors.New("could not parse json"), "Could not parse JSON")
 		return
 	}
 
@@ -47,12 +49,14 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 	firstResult, ok := searchResults[0].(map[string]interface{})
 	if !ok {
 		ctx.send("Problem parsing JSON, please try again.")
+		logger.Error(errors.New("could not parse json"), "Could not parse JSON")
 		return
 	}
 
-	resultID, ok := firstResult["id"].(float64)
+	resultID, ok := firstResult["mal_id"].(float64)
 	if !ok {
 		ctx.send("Problem parsing JSON, please try again.")
+		logger.Error(errors.New("could not parse json"), "Could not parse JSON")
 		return
 	}
 
@@ -111,7 +115,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 		&discordgo.MessageEmbedField{Name: "Genres", Value: genres, Inline: true},
 	}
 
-	em.Footer = &discordgo.MessageEmbedFooter{Text: "Searched using the Jikan API for MyAnimeList.net"}
+	em.Footer = &discordgo.MessageEmbedFooter{Text: "Results from the Jikan API for MyAnimeList.net"}
 
 	em.Color = 0x3053a0
 
