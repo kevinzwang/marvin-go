@@ -12,7 +12,7 @@ func (cmd *Servers) execute(ctx *Context, args []string) {
 	for _, g := range guilds {
 		name := g.Name
 		blankInv := discordgo.Invite{MaxAge: 30, MaxUses: 1, Temporary: true}
-		invite, _ := ctx.Session.ChannelInviteCreate(ctx.Message.ChannelID, blankInv)
+		invite, _ := ctx.Session.ChannelInviteCreate(g.Channels[0].ID, blankInv)
 		ctx.send(name + ": discord.gg/" + invite.Code)
 	}
 }
