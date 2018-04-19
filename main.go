@@ -49,6 +49,7 @@ func main() {
 
 func readConfigs() {
 	token = yamlutils.GetToken()
+	yamlutils.GetOwnerID()
 }
 
 func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate) {
@@ -68,7 +69,7 @@ func connect(session *discordgo.Session, _ *discordgo.Connect) {
 		if ok {
 			fmt.Printf("Global Prefix: \"%v\"\n", prefix)
 		} else {
-			fmt.Printf("Global Prefix: none")
+			fmt.Printf("Global Prefix: none\n")
 		}
 		guilds, _ := session.UserGuilds(100, "", "")
 		fmt.Printf("Servers: %v\n", len(guilds))

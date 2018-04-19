@@ -150,7 +150,10 @@ func GetAdmin(serverID string) []string {
 // GetOwnerID gets the owner id set in config.yaml
 func GetOwnerID() string {
 	owner, err := Get(false, "config", "owner")
-	logger.Warning(err, "Couldn't get owner.")
+	if err != nil || owner == nil {
+		owner = input("Bot owner ID: ")
+		Set(owner, "config", "owner")
+	}
 	return owner.(string)
 }
 
