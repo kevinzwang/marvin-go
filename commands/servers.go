@@ -13,7 +13,7 @@ func (cmd *Servers) execute(ctx *Context, args []string) {
 		name := g.Name
 		blankInv := discordgo.Invite{MaxAge: 30, MaxUses: 1, Temporary: true}
 		invite, _ := ctx.Session.ChannelInviteCreate(g.Channels[0].ID, blankInv)
-		ctx.send(name + ": discord.gg/" + invite.Code)
+		ctx.send(name + ": http://discord.gg/" + invite.Code)
 	}
 }
 

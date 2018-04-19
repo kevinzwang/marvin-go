@@ -12,12 +12,15 @@ func (cmd *Help) execute(ctx *Context, args []string) {
 		if ctx.Guild != nil {
 			ctx.reply(":mailbox_with_mail:")
 		}
-		msg := "These are the commands for Marvin, the Chaos server admin bot.\n\nFor more info about a command, do `help <command>`.\n\n"
+		msg := "These are the commands for Marvin, the Chaos server admin bot.\nFor more info about a command, do `help <command>`.\n\n(Note: you don't need to use prefixes in this DM.)\n\n"
 		categories = GetCategories()
 		for cat, cmds := range categories {
 			msg += "__" + cat + "__\n"
 
 			for _, c := range cmds {
+				if c.onlyOwner() {
+					msg += "\\*"
+				}
 				msg += "**"
 				names := c.names()
 				mainName := names[0]
@@ -36,6 +39,8 @@ func (cmd *Help) execute(ctx *Context, args []string) {
 
 			msg += "\n"
 		}
+
+		msg += "`*` = bot owner only"
 
 		usrChannel, err := ctx.Session.UserChannelCreate(ctx.Author.ID)
 		logger.Warning(err, "Could not create user channel")
@@ -68,7 +73,13 @@ func (cmd *Help) execute(ctx *Context, args []string) {
 			msg = msg[:len(msg)-2]
 			msg += ")"
 		}
-		msg += "**\n" + cmdToHelp.description() + "\n\n__Usage__\n"
+		msg += "**\n" + cmdToHelp.description()
+
+		if cmdToHelp.onlyOwner() {
+			msg += "\n\n(Note: Only the bot owner can use this command.)"
+		}
+
+		msg += "\n\n__Usage__\n"
 
 		usage := cmdToHelp.usage()
 		for _, u := range usage {
