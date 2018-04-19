@@ -117,7 +117,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 		},
 	}
 
-	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &em)
+	ctx.sendEmbed(&em)
 }
 
 func (cmd *Anime) description() string { return "gives info about the queried anime" }

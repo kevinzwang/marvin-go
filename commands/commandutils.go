@@ -25,12 +25,19 @@ type Context struct {
 	Message *discordgo.MessageCreate
 	Author  *discordgo.User
 	Session *discordgo.Session
+	Content string
 }
 
 // Send messages in discord into the same channel as the command
 func (ctx *Context) send(s string) (msg *discordgo.Message, err error) {
 	msg, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, s)
 	logger.Warning(err, "Could not send message")
+	return
+}
+
+func (ctx *Context) sendEmbed(em *discordgo.MessageEmbed) (msg *discordgo.Message, err error) {
+	msg, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, em)
+	logger.Warning(err, "Could not send embed")
 	return
 }
 
@@ -116,12 +123,12 @@ func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 			}
 
 			go session.ChannelTyping(msg.ChannelID)
-			go cmd.execute(createContext(msg, session), args)
+			go cmd.execute(createContext(msg, session, fullCmd), args)
 		}
 	}
 }
 
-func createContext(msg *discordgo.MessageCreate, session *discordgo.Session) (ctx *Context) {
+func createContext(msg *discordgo.MessageCreate, session *discordgo.Session, content string) (ctx *Context) {
 	ctx = new(Context)
 
 	channel, _ := session.Channel(msg.ChannelID)
@@ -131,6 +138,7 @@ func createContext(msg *discordgo.MessageCreate, session *discordgo.Session) (ct
 	ctx.Message = msg
 	ctx.Author = msg.Author
 	ctx.Session = session
+	ctx.Content = content
 
 	return
 }

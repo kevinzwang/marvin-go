@@ -24,7 +24,7 @@ func (cmd *Info) execute(ctx *Context, args []string) {
 		},
 	}
 
-	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	ctx.sendEmbed(&embed)
 }
 
 func (cmd *Info) description() string { return "gives information about this bot" }
