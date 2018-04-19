@@ -82,15 +82,10 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 		return
 	}
 
-	em := new(discordgo.MessageEmbed)
-
-	em.Thumbnail = &discordgo.MessageEmbedThumbnail{URL: resultParsed["image_url"].(string)}
 	title := resultParsed["title"].(string)
 	if resultParsed["title_english"] != nil && resultParsed["title_english"].(string) != resultParsed["title"].(string) {
 		title += " (English: " + resultParsed["title_english"].(string) + ")"
 	}
-	em.Title = title
-	em.URL = resultParsed["link_canonical"].(string)
 
 	desc := resultParsed["synopsis"].(string)
 	if len(desc) > 200 {
@@ -98,7 +93,6 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 		desc = desc[:strings.LastIndex(desc, " ")]
 		desc += " [...]"
 	}
-	em.Description = desc
 
 	genres := ""
 	genreList := resultParsed["genre"].([]interface{})
@@ -107,19 +101,23 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 	}
 	genres = genres[:len(genres)-5]
 
-	em.Fields = []*discordgo.MessageEmbedField{
-		&discordgo.MessageEmbedField{Name: "Episodes", Value: strconv.Itoa(int(resultParsed["episodes"].(float64))), Inline: true},
-		&discordgo.MessageEmbedField{Name: "Status", Value: resultParsed["status"].(string), Inline: true},
-		&discordgo.MessageEmbedField{Name: "Score", Value: strconv.FormatFloat(resultParsed["score"].(float64), 'f', 1, 64), Inline: true},
-		&discordgo.MessageEmbedField{Name: "Popularity", Value: strconv.Itoa(int(resultParsed["popularity"].(float64))), Inline: true},
-		&discordgo.MessageEmbedField{Name: "Genres", Value: genres, Inline: true},
+	em := discordgo.MessageEmbed{
+		URL:         resultParsed["link_canonical"].(string),
+		Title:       title,
+		Description: desc,
+		Thumbnail:   &discordgo.MessageEmbedThumbnail{URL: resultParsed["image_url"].(string)},
+		Footer:      &discordgo.MessageEmbedFooter{Text: "Results from the Jikan API for MyAnimeList.net"},
+		Color:       0x3053a0,
+		Fields: []*discordgo.MessageEmbedField{
+			&discordgo.MessageEmbedField{Name: "Episodes", Value: strconv.Itoa(int(resultParsed["episodes"].(float64))), Inline: true},
+			&discordgo.MessageEmbedField{Name: "Status", Value: resultParsed["status"].(string), Inline: true},
+			&discordgo.MessageEmbedField{Name: "Score", Value: strconv.FormatFloat(resultParsed["score"].(float64), 'f', 1, 64) + "/10", Inline: true},
+			&discordgo.MessageEmbedField{Name: "Popularity", Value: "#" + strconv.Itoa(int(resultParsed["popularity"].(float64))), Inline: true},
+			&discordgo.MessageEmbedField{Name: "Genres", Value: genres, Inline: true},
+		},
 	}
 
-	em.Footer = &discordgo.MessageEmbedFooter{Text: "Results from the Jikan API for MyAnimeList.net"}
-
-	em.Color = 0x3053a0
-
-	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, em)
+	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &em)
 }
 
 func (cmd *Anime) description() string { return "gives info about the queried anime" }
