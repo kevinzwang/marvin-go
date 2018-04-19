@@ -12,14 +12,17 @@ import (
 )
 
 // Get gets a YAML object that corresponds to path from file
-func Get(file string, path ...string) (interface{}, error) {
+func Get(strict bool, file string, path ...string) (interface{}, error) {
 	file = "config/" + file + ".yaml"
 	if _, err := os.Stat(file); err != nil {
 		return nil, err
 	}
 
 	b, err := ioutil.ReadFile(file)
-	if logger.Error(err, "Could not read "+file) {
+	if err != nil {
+		if strict {
+			logger.Error(err, "Could not read "+file)
+		}
 		return nil, err
 	}
 
@@ -33,12 +36,16 @@ func Get(file string, path ...string) (interface{}, error) {
 	for _, p := range path {
 		parsedMap, ok := parsed.(map[interface{}]interface{})
 		if !ok {
-			logger.Error(errors.New("yaml object is not map"), "YAML object is not map")
+			if strict {
+				logger.Error(errors.New("yaml object is not map"), "YAML object is not map")
+			}
 			return nil, err
 		}
 		parsed, ok = parsedMap[p]
 		if !ok {
-			logger.Error(errors.New("yaml map does not contain key \""+p+"\""), "YAML map does not contain key \""+p+"\"")
+			if strict {
+				logger.Error(errors.New("yaml map does not contain key \""+p+"\""), "YAML map does not contain key \""+p+"\"")
+			}
 			return nil, err
 		}
 	}
@@ -72,6 +79,7 @@ func Set(toSet interface{}, file string, path ...string) error {
 				logger.Warning(errors.New(""), "Overwriting YAML object with map")
 			}
 			next = make(map[interface{}]interface{})
+			(*curr)[path[i]] = next
 		}
 		curr = &next
 	}
@@ -83,7 +91,7 @@ func Set(toSet interface{}, file string, path ...string) error {
 	}
 
 	err = ioutil.WriteFile(file, b, 0644)
-	if logger.Error(err, "Could write to "+file) {
+	if logger.Error(err, "Could not write to "+file) {
 		return err
 	}
 
@@ -92,7 +100,7 @@ func Set(toSet interface{}, file string, path ...string) error {
 
 // GetToken gets the bot token
 func GetToken() string {
-	token, err := Get("config", "token")
+	token, err := Get(true, "config", "token")
 
 	if err != nil || token == nil {
 		token = input("Bot token: ")
@@ -103,26 +111,46 @@ func GetToken() string {
 }
 
 // GetPrefix gets the bot prefix
-func GetPrefix() string {
-	prefix, err := Get("config", "prefix")
+func GetPrefix(serverID string) (string, bool) {
+	prefix, err := Get(false, "config", serverID, "prefix")
 
-	if err != nil || prefix == nil {
-		prefix = input("Bot prefix: ")
-		Set(prefix, "config", "prefix")
+	if prefix == nil {
+		prefix, err = Get(false, "config", "global", "prefix")
 	}
 
-	return prefix.(string)
+	if logger.Warning(err, "Couldn't get prefix for server.") {
+		return "", false
+	}
+
+	p, ok := prefix.(string)
+	if !ok {
+		return "", false
+	}
+	return p, true
 }
 
-// GetOwnerID gets the bot owner ID
-func GetOwnerID() string {
-	owner, err := Get("config", "owner")
-
-	if err != nil || owner == nil {
-		owner = input("Bot owner ID: ")
-		Set(owner, "config", "owner")
+// SetPrefix sets the prefix for the specified server
+func SetPrefix(serverID string, prefix string) bool {
+	err := Set(prefix, "config", serverID, "prefix")
+	if err != nil {
+		return false
 	}
+	return true
+}
 
+// GetAdmin gets the admins for the server
+func GetAdmin(serverID string) []string {
+	admin, err := Get(false, "config", serverID, "admin")
+
+	logger.Warning(err, "Couldn't get admins for server.")
+
+	return admin.([]string)
+}
+
+// GetOwnerID gets the owner id set in config.yaml
+func GetOwnerID() string {
+	owner, err := Get(false, "config", "owner")
+	logger.Warning(err, "Couldn't get owner.")
 	return owner.(string)
 }
 

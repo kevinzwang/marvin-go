@@ -4,17 +4,9 @@ import (
 	"strings"
 
 	"../logger"
+	"../yamlutils"
 	"github.com/bwmarrin/discordgo"
 )
-
-var prefix *string
-var ownerID *string
-
-// Init should be called by main()
-func Init(p *string, o *string) {
-	prefix = p
-	ownerID = o
-}
 
 // Command interface stores functions for commands
 type Command interface {
@@ -46,6 +38,16 @@ func (ctx *Context) send(s string) (msg *discordgo.Message, err error) {
 func (ctx *Context) reply(s string) (msg *discordgo.Message, err error) {
 	msg, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Author.Mention()+" "+s)
 	logger.Warning(err, "Could not send message")
+	return
+}
+
+func (ctx *Context) wrongNumArgs(cmd string) (msg *discordgo.Message, err error) {
+	msg, err = ctx.reply("Incorrect number of arguments for command `" + cmd + "`. Try `!help " + cmd + "`.")
+	return
+}
+
+func (ctx *Context) wrongPerms(cmd string) (msg *discordgo.Message, err error) {
+	msg, err = ctx.reply("the command `" + cmd + "` can only be used by the owner of this bot!")
 	return
 }
 
@@ -83,24 +85,15 @@ func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 	isCmd := false
 	fullCmd := ""
 
-	if strings.HasPrefix(content, *prefix) {
-		if channel.GuildID == "" {
-			session.ChannelMessageSend(msg.ChannelID, "You don't need to include prefixes in DMs")
-		}
-
-		fullCmd = content[len(*prefix):]
-		isCmd = true
-
-	} else if strings.HasPrefix(content, session.State.User.Mention()) {
-		if channel.GuildID == "" {
-			session.ChannelMessageSend(msg.ChannelID, "You don't need to include prefixes in DMs")
-		}
-
-		fullCmd = content[len(session.State.User.Mention()):]
-		isCmd = true
-	} else if channel.GuildID == "" {
+	if channel.GuildID == "" {
 		fullCmd = content
 		isCmd = true
+	} else {
+		prefix, ok := getMsgPrefix(msg, session)
+		if ok {
+			fullCmd = content[len(prefix):]
+			isCmd = true
+		}
 	}
 
 	if isCmd {
@@ -110,7 +103,7 @@ func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 
 		cmd := commands[cmdName]
 		if cmd != nil {
-			if cmd.onlyOwner() == true && msg.Author.ID != *ownerID {
+			if cmd.onlyOwner() == true && msg.Author.ID != yamlutils.GetOwnerID() {
 				session.ChannelMessageSend(msg.ChannelID, msg.Author.Mention()+", the command `"+cmdName+"` can only be used by the owner of this bot!")
 				return
 			}
@@ -118,7 +111,7 @@ func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 
 			// if it has a wrong amount of arguments, exit
 			if (len(args) < min && min != -1) || (len(args) > max && max != -1) {
-				session.ChannelMessageSend(msg.ChannelID, "Incorrect number of arguments for command `"+cmdName+"`. Try `!help "+cmdName+"`.")
+				session.ChannelMessageSend(msg.ChannelID, msg.Author.Mention()+" Incorrect number of arguments for command `"+cmdName+"`. Try `!help "+cmdName+"`.")
 				return
 			}
 
@@ -150,4 +143,25 @@ func GetCategories() map[string][]Command {
 // GetCommands gives the command data required to make a help command
 func GetCommands() map[string]Command {
 	return commands
+}
+
+func getMsgPrefix(msg *discordgo.MessageCreate, session *discordgo.Session) (string, bool) {
+	channel, err := session.Channel(msg.ChannelID)
+	logger.Warning(err, "Couldn't get channel")
+
+	prefix, ok := yamlutils.GetPrefix(channel.GuildID)
+
+	if ok {
+		if strings.HasPrefix(msg.Content, prefix) {
+			return prefix, true
+		}
+	}
+
+	mention := session.State.User.Mention()
+
+	if strings.HasPrefix(msg.Content, mention) {
+		return mention, true
+	}
+
+	return "", false
 }

@@ -14,8 +14,8 @@ import (
 )
 
 var token string
-var prefix string
-var ownerID string
+
+var reconnect = false
 
 func init() {
 	logger.Info("SYSTEM START")
@@ -31,10 +31,8 @@ func main() {
 	discord.AddHandler(messageCreate)
 	discord.AddHandler(connect)
 
-	commands.Init(&prefix, &ownerID)
-
 	commands.AddCommands(&commands.Ping{}, &commands.Quit{}, &commands.Help{}, &commands.Info{},
-		&commands.Cat{}, &commands.Anime{}, &commands.Invite{})
+		&commands.Cat{}, &commands.Anime{}, &commands.Invite{}, &commands.Prefix{}, &commands.SetPrefix{})
 
 	err = discord.Open()
 	logger.Fatal(err, "Could not open connection to Discord")
@@ -51,8 +49,6 @@ func main() {
 
 func readConfigs() {
 	token = yamlutils.GetToken()
-	prefix = yamlutils.GetPrefix()
-	ownerID = yamlutils.GetOwnerID()
 }
 
 func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate) {
@@ -64,14 +60,23 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 }
 
 func connect(session *discordgo.Session, _ *discordgo.Connect) {
-	fmt.Println("=============")
-	usr, _ := session.User("@me")
-	fmt.Printf("Name: %v#%v\n", usr.Username, usr.Discriminator)
-	owner, _ := session.User(ownerID)
-	fmt.Printf("Owner: %v#%v\n", owner.Username, owner.Discriminator)
-	guilds, _ := session.UserGuilds(100, "", "")
-	fmt.Printf("Servers: %v\n", len(guilds))
-	fmt.Printf("Prefix: %v\n", prefix)
-	fmt.Println("=============")
-	logger.Info("CONNECTED TO DISCORD")
+	if !reconnect {
+		fmt.Println("=============")
+		usr, _ := session.User("@me")
+		fmt.Printf("Name: %v#%v\n", usr.Username, usr.Discriminator)
+		prefix, ok := yamlutils.GetPrefix("global")
+		if ok {
+			fmt.Printf("Global Prefix: \"%v\"\n", prefix)
+		} else {
+			fmt.Printf("Global Prefix: none")
+		}
+		guilds, _ := session.UserGuilds(100, "", "")
+		fmt.Printf("Servers: %v\n", len(guilds))
+		fmt.Println("=============")
+		logger.Info("CONNECTED TO DISCORD")
+		reconnect = true
+	} else {
+		logger.Info("RECONNECTEDCONNECTED TO DISCORD")
+	}
+
 }
