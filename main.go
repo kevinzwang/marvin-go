@@ -31,8 +31,18 @@ func main() {
 	discord.AddHandler(messageCreate)
 	discord.AddHandler(connect)
 
-	commands.AddCommands(&commands.Ping{}, &commands.Quit{}, &commands.Help{}, &commands.Info{},
-		&commands.Cat{}, &commands.Anime{}, &commands.Invite{}, &commands.Prefix{}, &commands.SetPrefix{})
+	commands.AddCommands(
+		&commands.Ping{},
+		&commands.Quit{},
+		&commands.Help{},
+		&commands.Info{},
+		&commands.Cat{},
+		&commands.Anime{},
+		&commands.Invite{},
+		&commands.Prefix{},
+		&commands.SetPrefix{},
+		&commands.Servers{},
+	)
 
 	err = discord.Open()
 	logger.Fatal(err, "Could not open connection to Discord")
