@@ -105,6 +105,12 @@ func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 
 	if isCmd {
 		splitCmd := strings.Fields(fullCmd)
+
+		// yeah my life sucks
+		if len(splitCmd) == 0 {
+			return
+		}
+
 		cmdName := strings.ToLower(splitCmd[0])
 		args := splitCmd[1:]
 
