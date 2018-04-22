@@ -88,7 +88,10 @@ func AddCommand(c Command) {
 // Handle calls a command if the message is a command
 func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 	content := msg.Content
-	channel, _ := session.Channel(msg.ChannelID)
+	channel, err := session.Channel(msg.ChannelID)
+	if logger.Error(err, "couldn't get channel") {
+		return
+	}
 	isCmd := false
 	fullCmd := ""
 
