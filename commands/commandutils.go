@@ -166,6 +166,11 @@ func getMsgPrefix(msg *discordgo.MessageCreate, session *discordgo.Session) (str
 	channel, err := session.Channel(msg.ChannelID)
 	logger.Warning(err, "Couldn't get channel")
 
+	if channel == nil {
+		logger.Error(err, "Channel object is nil but no error was thrown by discordgo")
+		return "", false
+	}
+
 	prefix, ok := yamlutils.GetPrefix(channel.GuildID)
 
 	if ok {
