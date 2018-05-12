@@ -6,6 +6,7 @@ import (
 	"../logger"
 	"../yamlutils"
 	"github.com/bwmarrin/discordgo"
+	"github.com/google/shlex"
 )
 
 var rules [][][][]string
@@ -114,7 +115,11 @@ func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 	}
 
 	if isCmd {
-		splitCmd := strings.Fields(fullCmd)
+		splitCmd, err := shlex.Split(fullCmd)
+
+		if logger.Error(err, "couldn't parse command") {
+			return
+		}
 
 		// yeah my life sucks
 		if len(splitCmd) == 0 {
