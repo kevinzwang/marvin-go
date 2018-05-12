@@ -52,6 +52,9 @@ func main() {
 
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 
+	self, _ := discord.User("@me")
+	discord.UpdateStatus(0, "@"+self.Username+"#"+self.Discriminator+"  help")
+
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
