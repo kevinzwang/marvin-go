@@ -8,6 +8,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var rules [][][][]string
+
 // Command interface stores functions for commands
 type Command interface {
 	execute(*Context, []string)
@@ -50,6 +52,11 @@ func (ctx *Context) reply(s string) (msg *discordgo.Message, err error) {
 
 func (ctx *Context) wrongNumArgs(cmd string) (msg *discordgo.Message, err error) {
 	msg, err = ctx.reply("Incorrect number of arguments for command `" + cmd + "`. Try `!help " + cmd + "`.")
+	return
+}
+
+func (ctx *Context) wrongUsage(cmd string) (msg *discordgo.Message, err error) {
+	msg, err = ctx.reply("Incorrect usage of command `" + cmd + "`. Try `!help " + cmd + "`.")
 	return
 }
 

@@ -43,6 +43,8 @@ func main() {
 		&commands.SetPrefix{},
 		&commands.Servers{},
 		&commands.Avatar{},
+		&commands.If{},
+		&commands.Rules{},
 	)
 
 	err = discord.Open()
