@@ -48,7 +48,6 @@ func main() {
 		&commands.Neko{},
 		&commands.Foxgirl{},
 		&commands.Hug{},
-		&commands.Kiss{},
 		&commands.Pat{},
 		&commands.Slap{},
 	)
