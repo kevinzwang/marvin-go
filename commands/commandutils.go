@@ -95,10 +95,6 @@ func AddCommand(c Command) {
 
 // Handle calls a command if the message is a command
 func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
-	if msg.Author.Bot {
-		session.ChannelMessageSend(msg.ChannelID, msg.Author.Mention()+", screw you and your owner.")
-		return
-	}
 	content := msg.Content
 	channel, err := session.Channel(msg.ChannelID)
 	if logger.Error(err, "couldn't get channel") {
@@ -135,6 +131,11 @@ func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 
 		cmd := commands[cmdName]
 		if cmd != nil {
+			if msg.Author.Bot {
+				session.ChannelMessageSend(msg.ChannelID, msg.Author.Mention()+", screw you and your owner.")
+				return
+			}
+
 			if cmd.onlyOwner() == true && msg.Author.ID != yamlutils.GetOwnerID() {
 				session.ChannelMessageSend(msg.ChannelID, msg.Author.Mention()+", the command `"+cmdName+"` can only be used by the owner of this bot!")
 				return
