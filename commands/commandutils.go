@@ -95,6 +95,9 @@ func AddCommand(c Command) {
 
 // Handle calls a command if the message is a command
 func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
+	if msg.Author.Bot {
+		session.ChannelMessageSend(msg.ChannelID, msg.Author.Mention()+", screw you and your owner.")
+	}
 	content := msg.Content
 	channel, err := session.Channel(msg.ChannelID)
 	if logger.Error(err, "couldn't get channel") {
