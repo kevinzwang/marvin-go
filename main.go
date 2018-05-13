@@ -45,6 +45,12 @@ func main() {
 		&commands.Avatar{},
 		&commands.If{},
 		&commands.Rules{},
+		&commands.Neko{},
+		&commands.Foxgirl{},
+		&commands.Hug{},
+		&commands.Kiss{},
+		&commands.Pat{},
+		&commands.Slap{},
 	)
 
 	err = discord.Open()
