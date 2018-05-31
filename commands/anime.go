@@ -33,7 +33,7 @@ type queryMedia struct {
 	Status      string
 	MeanScore   int
 	Rankings    []queryMediaRank
-	Tags        []queryMediaTag
+	Genres      []string
 	CoverImage  struct {
 		Medium string
 	}
@@ -42,10 +42,6 @@ type queryMedia struct {
 type queryMediaRank struct {
 	Rank    int
 	AllTime bool
-}
-
-type queryMediaTag struct {
-	Name string
 }
 
 type queryError struct {
@@ -74,9 +70,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 					rank
 					allTime
 				}
-				tags {
-					name
-				}
+				genres
 				coverImage {
 					medium
 				}
@@ -132,11 +126,11 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 		}
 	}
 
-	tags := ""
-	for i, t := range m.Tags {
-		tags += "[" + t.Name + "](https://anilist.co/search/anime?includedGenres=" + url.QueryEscape(t.Name) + ")"
-		if i != len(m.Tags)-1 {
-			tags += "  |  "
+	genres := ""
+	for i, g := range m.Genres {
+		genres += "[" + g + "](https://anilist.co/search/anime?includedGenres=" + url.QueryEscape(g) + ")"
+		if i != len(m.Genres)-1 {
+			genres += "  |  "
 		}
 	}
 
@@ -151,7 +145,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 			&discordgo.MessageEmbedField{Name: "Status", Value: strings.Title(strings.ToLower(strings.Replace(m.Status, "_", " ", -1))), Inline: true},
 			&discordgo.MessageEmbedField{Name: "Score", Value: strconv.Itoa(m.MeanScore) + "%", Inline: true},
 			&discordgo.MessageEmbedField{Name: "Popularity", Value: "#" + strconv.Itoa(allTimePop), Inline: true},
-			&discordgo.MessageEmbedField{Name: "Tags", Value: tags, Inline: true},
+			&discordgo.MessageEmbedField{Name: "Tags", Value: genres, Inline: true},
 		},
 		Footer: &discordgo.MessageEmbedFooter{Text: "Fetched from Anilist.co"},
 	}
