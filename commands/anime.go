@@ -3,9 +3,9 @@ package commands
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -16,107 +16,145 @@ import (
 // Anime gives info about the queried anime
 type Anime struct{}
 
+type query struct {
+	Data struct {
+		Media queryMedia
+	}
+	Errors []queryError
+}
+
+type queryMedia struct {
+	Title struct {
+		UserPreferred string
+	}
+	SiteURL     string
+	Description string
+	Episodes    int
+	Status      string
+	MeanScore   int
+	Rankings    []queryMediaRank
+	Tags        []queryMediaTag
+	CoverImage  struct {
+		Medium string
+	}
+}
+
+type queryMediaRank struct {
+	Rank    int
+	AllTime bool
+}
+
+type queryMediaTag struct {
+	Name string
+}
+
+type queryError struct {
+	Message   string
+	Status    int
+	Locations []queryErrorLocation
+}
+
+type queryErrorLocation struct {
+	Line   int
+	Column int
+}
+
 func (cmd *Anime) execute(ctx *Context, args []string) {
-	query := strings.Join(args, " ")
-	searchResp, err := http.Get("https://api.jikan.moe/search/anime/" + query)
-	if logger.Error(err, "Could not access Jikan API") {
-		ctx.send("Problem searching for anime, please try again.")
+	queryString := `query GetRelevantAnime ($search: String) {
+			Media (search: $search, type: ANIME, sort: [POPULARITY_DESC]) {
+				title {
+					userPreferred
+				}
+				siteUrl
+				description
+				episodes
+				status
+				meanScore
+				rankings {
+					rank
+					allTime
+				}
+				tags {
+					name
+				}
+				coverImage {
+					medium
+				}
+			}
+		}`
+
+	body, err := json.Marshal(map[string]interface{}{
+		"query":     queryString,
+		"variables": map[string]string{"search": strings.Join(args, " ")},
+	})
+
+	if logger.Error(err, "Problem formatting query to JSON") {
+		ctx.send("Could not format query, please try again.")
 		return
 	}
 
-	defer searchResp.Body.Close()
+	resp, err := http.Post("https://graphql.anilist.co", "application/json", bytes.NewReader(body))
+	if logger.Error(err, "Could not access Anilist API") {
+		ctx.send("Problem accessing Anilist, please try again.")
+		return
+	}
 
-	searchBody, err := ioutil.ReadAll(searchResp.Body)
-	var searchParsed map[string]interface{}
-	err = json.Unmarshal(searchBody, &searchParsed)
+	defer resp.Body.Close()
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if logger.Error(err, "Could not get response") {
+		ctx.send("Problem getting response from Anilist, please try again.")
+		return
+	}
+
+	var q query
+	err = json.Unmarshal(respBody, &q)
 	if logger.Error(err, "Could not parse JSON") {
 		ctx.send("Problem parsing JSON, please try again.")
 		return
 	}
-
-	searchResults, ok := searchParsed["result"].([]interface{})
-	if !ok {
-		ctx.send("Problem parsing JSON, please try again.")
-		logger.Error(errors.New("could not parse json"), "Could not parse JSON")
-		return
-	}
-
-	if len(searchResults) == 0 {
+	if q.Errors != nil {
 		ctx.reply("No results matched your query.")
 		return
 	}
 
-	firstResult, ok := searchResults[0].(map[string]interface{})
-	if !ok {
-		ctx.send("Problem parsing JSON, please try again.")
-		logger.Error(errors.New("could not parse json"), "Could not parse JSON")
-		return
+	m := q.Data.Media
+
+	if len(m.Description) > 186 {
+		m.Description = m.Description[:183] + "..."
 	}
 
-	resultID, ok := firstResult["mal_id"].(float64)
-	if !ok {
-		ctx.send("Problem parsing JSON, please try again.")
-		logger.Error(errors.New("could not parse json"), "Could not parse JSON")
-		return
+	allTimePop := 0
+	for _, p := range m.Rankings {
+		if p.AllTime {
+			allTimePop = p.Rank
+			break
+		}
 	}
 
-	resultResp, err := http.Get("https://api.jikan.moe/anime/" + strconv.Itoa(int(resultID)))
-	if logger.Error(err, "Could not get anime") {
-		ctx.send("Problem finding anime, please try again.")
-		return
+	tags := ""
+	for i, t := range m.Tags {
+		tags += "[" + t.Name + "](https://anilist.co/search/anime?includedGenres=" + url.QueryEscape(t.Name) + ")"
+		if i != len(m.Tags)-1 {
+			tags += "  |  "
+		}
 	}
-
-	defer resultResp.Body.Close()
-
-	resultBody, err := ioutil.ReadAll(resultResp.Body)
-	resultBody = bytes.Replace(resultBody, []byte("&#039;"), []byte("'"), -1)
-	if logger.Error(err, "Could not parse JSON") {
-		ctx.send("Problem parsing JSON, please try again.")
-		return
-	}
-
-	var resultParsed map[string]interface{}
-	err = json.Unmarshal(resultBody, &resultParsed)
-	if logger.Error(err, "Could not parse JSON") {
-		ctx.send("Problem parsing JSON, please try again.")
-		return
-	}
-
-	title := resultParsed["title"].(string)
-	if resultParsed["title_english"] != nil && resultParsed["title_english"].(string) != resultParsed["title"].(string) {
-		title += " (English: " + resultParsed["title_english"].(string) + ")"
-	}
-
-	desc := resultParsed["synopsis"].(string)
-	if len(desc) > 200 {
-		desc = desc[:200]
-		desc = desc[:strings.LastIndex(desc, " ")]
-		desc += " [...]"
-	}
-
-	genres := ""
-	genreList := resultParsed["genre"].([]interface{})
-	for _, g := range genreList {
-		genres += "[" + g.(map[string]interface{})["name"].(string) + "](" + g.(map[string]interface{})["url"].(string) + ")  |  "
-	}
-	genres = genres[:len(genres)-5]
 
 	em := discordgo.MessageEmbed{
-		URL:         resultParsed["link_canonical"].(string),
-		Title:       title,
-		Description: desc,
-		Thumbnail:   &discordgo.MessageEmbedThumbnail{URL: resultParsed["image_url"].(string)},
-		Footer:      &discordgo.MessageEmbedFooter{Text: "Results from the Jikan API for MyAnimeList.net"},
+		URL:         m.SiteURL,
+		Title:       m.Title.UserPreferred,
+		Description: strings.Replace(strings.Replace(m.Description, "<br>", "", -1), "\n", "", -1),
+		Thumbnail:   &discordgo.MessageEmbedThumbnail{URL: m.CoverImage.Medium},
 		Color:       0x3053a0,
 		Fields: []*discordgo.MessageEmbedField{
-			&discordgo.MessageEmbedField{Name: "Episodes", Value: strconv.Itoa(int(resultParsed["episodes"].(float64))), Inline: true},
-			&discordgo.MessageEmbedField{Name: "Status", Value: resultParsed["status"].(string), Inline: true},
-			&discordgo.MessageEmbedField{Name: "Score", Value: strconv.FormatFloat(resultParsed["score"].(float64), 'f', 1, 64) + "/10", Inline: true},
-			&discordgo.MessageEmbedField{Name: "Popularity", Value: "#" + strconv.Itoa(int(resultParsed["popularity"].(float64))), Inline: true},
-			&discordgo.MessageEmbedField{Name: "Genres", Value: genres, Inline: true},
+			&discordgo.MessageEmbedField{Name: "Episodes", Value: strconv.Itoa(m.Episodes), Inline: true},
+			&discordgo.MessageEmbedField{Name: "Status", Value: strings.Title(strings.ToLower(strings.Replace(m.Status, "_", " ", -1))), Inline: true},
+			&discordgo.MessageEmbedField{Name: "Score", Value: strconv.Itoa(m.MeanScore) + "%", Inline: true},
+			&discordgo.MessageEmbedField{Name: "Popularity", Value: "#" + strconv.Itoa(allTimePop), Inline: true},
+			&discordgo.MessageEmbedField{Name: "Tags", Value: tags, Inline: true},
 		},
+		Footer: &discordgo.MessageEmbedFooter{Text: "Fetched from Anilist.co"},
 	}
-
 	ctx.sendEmbed(&em)
 }
 
