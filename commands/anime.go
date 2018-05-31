@@ -145,7 +145,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 		Title:       m.Title.UserPreferred,
 		Description: strings.Replace(strings.Replace(m.Description, "<br>", "", -1), "\n", "", -1),
 		Thumbnail:   &discordgo.MessageEmbedThumbnail{URL: m.CoverImage.Medium},
-		Color:       0x3053a0,
+		Color:       0x44b5f0,
 		Fields: []*discordgo.MessageEmbedField{
 			&discordgo.MessageEmbedField{Name: "Episodes", Value: strconv.Itoa(m.Episodes), Inline: true},
 			&discordgo.MessageEmbedField{Name: "Status", Value: strings.Title(strings.ToLower(strings.Replace(m.Status, "_", " ", -1))), Inline: true},
