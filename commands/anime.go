@@ -145,7 +145,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 			&discordgo.MessageEmbedField{Name: "Status", Value: strings.Title(strings.ToLower(strings.Replace(m.Status, "_", " ", -1))), Inline: true},
 			&discordgo.MessageEmbedField{Name: "Score", Value: strconv.Itoa(m.MeanScore) + "%", Inline: true},
 			&discordgo.MessageEmbedField{Name: "Popularity", Value: "#" + strconv.Itoa(allTimePop), Inline: true},
-			&discordgo.MessageEmbedField{Name: "Tags", Value: genres, Inline: true},
+			&discordgo.MessageEmbedField{Name: "Genres", Value: genres, Inline: true},
 		},
 		Footer: &discordgo.MessageEmbedFooter{Text: "Fetched from Anilist.co"},
 	}
