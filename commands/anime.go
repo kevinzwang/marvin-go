@@ -137,7 +137,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 	em := discordgo.MessageEmbed{
 		URL:         m.SiteURL,
 		Title:       m.Title.UserPreferred,
-		Description: strings.Replace(strings.Replace(m.Description, "<br>", "", -1), "\n", "", -1),
+		Description: strings.Replace(strings.Replace(m.Description, "<br>", "", -1), "\n", " ", -1),
 		Thumbnail:   &discordgo.MessageEmbedThumbnail{URL: m.CoverImage.Medium},
 		Color:       0x44b5f0,
 		Fields: []*discordgo.MessageEmbedField{
