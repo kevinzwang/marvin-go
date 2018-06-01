@@ -114,8 +114,9 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 
 	m := q.Data.Media
 
-	if len(m.Description) > 186 {
-		m.Description = m.Description[:183] + "..."
+	descLen := 256
+	if len(m.Description) > descLen {
+		m.Description = m.Description[:descLen-3] + "..."
 	}
 
 	allTimePop := 0
