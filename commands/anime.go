@@ -11,6 +11,7 @@ import (
 
 	"../logger"
 	"github.com/bwmarrin/discordgo"
+	"github.com/lunny/html2md"
 )
 
 // Anime gives info about the queried anime
@@ -29,7 +30,7 @@ type queryMedia struct {
 	}
 	SiteURL     string
 	Description string
-	Episodes    int
+	Format      string
 	Status      string
 	MeanScore   int
 	Rankings    []queryMediaRank
@@ -63,7 +64,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 				}
 				siteUrl
 				description
-				episodes
+				format
 				status
 				meanScore
 				rankings {
@@ -126,6 +127,9 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 			break
 		}
 	}
+	if allTimePop < 1 && len(m.Rankings) > 0 {
+		allTimePop = m.Rankings[0].Rank
+	}
 
 	genres := ""
 	for i, g := range m.Genres {
@@ -135,14 +139,28 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 		}
 	}
 
+	format := ""
+	switch m.Format {
+	case "TV_SHORT":
+		format = "TV Short"
+	case "MOVIE":
+		format = "Movie"
+	case "SPECIAL":
+		format = "Special"
+	case "MUSIC":
+		format = "Music"
+	default:
+		format = m.Format
+	}
+
 	em := discordgo.MessageEmbed{
 		URL:         m.SiteURL,
 		Title:       m.Title.UserPreferred,
-		Description: strings.Replace(strings.Replace(m.Description, "<br>", "", -1), "\n", " ", -1),
+		Description: html2md.Convert(strings.Replace(strings.Replace(m.Description, "<br>", "", -1), "\n", " ", -1)),
 		Thumbnail:   &discordgo.MessageEmbedThumbnail{URL: m.CoverImage.Medium},
 		Color:       0x44b5f0,
 		Fields: []*discordgo.MessageEmbedField{
-			&discordgo.MessageEmbedField{Name: "Episodes", Value: strconv.Itoa(m.Episodes), Inline: true},
+			&discordgo.MessageEmbedField{Name: "Format", Value: format, Inline: true},
 			&discordgo.MessageEmbedField{Name: "Status", Value: strings.Title(strings.ToLower(strings.Replace(m.Status, "_", " ", -1))), Inline: true},
 			&discordgo.MessageEmbedField{Name: "Score", Value: strconv.Itoa(m.MeanScore) + "%", Inline: true},
 			&discordgo.MessageEmbedField{Name: "Popularity", Value: "#" + strconv.Itoa(allTimePop), Inline: true},

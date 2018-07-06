@@ -1,16 +1,20 @@
 package commands
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"strings"
 )
+
+type catQuery struct {
+	File string
+}
 
 // Cat shows an image of a cat
 type Cat struct{}
 
 func (cmd *Cat) execute(ctx *Context, args []string) {
-	resp, err := http.Get("http://thecatapi.com/api/images/get?format=html")
+	resp, err := http.Get("http://aws.random.cat/meow")
 	if err != nil {
 		ctx.send("Sorry, could not get cat image :( Try again.")
 		return
@@ -19,11 +23,14 @@ func (cmd *Cat) execute(ctx *Context, args []string) {
 	defer resp.Body.Close()
 
 	inBytes, err := ioutil.ReadAll(resp.Body)
-	body := string(inBytes)
-	body = body[strings.Index(body, "src")+3:]
-	body = body[strings.Index(body, "http"):]
-	body = body[:strings.LastIndex(body, "\"")]
-	ctx.send(body)
+	if err != nil {
+		ctx.send("Sorry, could not read cat image :( Try again.")
+		return
+	}
+	var bodyJSON catQuery
+	json.Unmarshal(inBytes, &bodyJSON)
+	// fmt.Println(string(inBytes))
+	ctx.send(bodyJSON.File)
 
 }
 

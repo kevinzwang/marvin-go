@@ -27,6 +27,13 @@ func (cmd *Avatar) execute(ctx *Context, args []string) {
 	}
 }
 
+func (cmd *Avatar) matchAny(content string, usr *discordgo.User, nick string) (string, bool) {
+	if content == usr.Username || content == usr.Username+"#"+usr.Discriminator || content == nick || content == usr.ID {
+		return usr.ID, true
+	}
+	return "", false
+}
+
 func (cmd *Avatar) getID(ctx *Context, args []string) (string, bool) {
 	if len(args) == 0 {
 		return ctx.Message.Author.ID, true
@@ -37,12 +44,22 @@ func (cmd *Avatar) getID(ctx *Context, args []string) (string, bool) {
 		return mentions[0].ID, true
 	}
 
-	// check if it's a username, nick, or ID
 	content := strings.TrimSpace(ctx.Content)
-	users := ctx.Guild.Members
-	for _, u := range users {
-		if content == u.User.Username || content == u.User.Username+"#"+u.User.Discriminator || content == u.Nick || content == u.User.ID {
-			return u.User.ID, true
+	if ctx.Guild == nil {
+		self, _ := ctx.Session.User("@me")
+		if id, match := cmd.matchAny(content, self, ""); match {
+			return id, true
+		}
+		if id, match := cmd.matchAny(content, ctx.Author, ""); match {
+			return id, true
+		}
+	} else {
+		// check if it's a username, nick, or ID
+		users := ctx.Guild.Members
+		for _, u := range users {
+			if id, match := cmd.matchAny(content, u.User, u.Nick); match {
+				return id, true
+			}
 		}
 	}
 
