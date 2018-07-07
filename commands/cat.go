@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 type catQuery struct {
@@ -29,7 +30,7 @@ func (cmd *Cat) execute(ctx *Context, args []string) {
 	}
 	var bodyJSON catQuery
 	json.Unmarshal(inBytes, &bodyJSON)
-	// fmt.Println(string(inBytes))
+	time.Sleep(100 * time.Millisecond)
 	ctx.send(bodyJSON.File)
 
 }
