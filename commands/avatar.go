@@ -17,7 +17,7 @@ func (cmd *Avatar) execute(ctx *Context, args []string) {
 		embed := discordgo.MessageEmbed{
 			Title: "Avatar for " + usr.Username + "#" + usr.Discriminator,
 			Image: &discordgo.MessageEmbedImage{
-				URL: "https://cdn.discordapp.com/avatars/" + usr.ID + "/" + usr.Avatar + ".jpg",
+				URL: usr.AvatarURL("256"),
 			},
 		}
 
@@ -28,7 +28,7 @@ func (cmd *Avatar) execute(ctx *Context, args []string) {
 }
 
 func (cmd *Avatar) matchAny(content string, usr *discordgo.User, nick string) (string, bool) {
-	if content == usr.Username || content == usr.Username+"#"+usr.Discriminator || content == nick || content == usr.ID {
+	if content == usr.Username || content == usr.String() || content == nick || content == usr.ID {
 		return usr.ID, true
 	}
 	return "", false
