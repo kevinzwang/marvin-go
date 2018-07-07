@@ -78,6 +78,8 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 		return
 	}
 
+	neutralizeSpotifyLink(session, message)
+
 	commands.Handle(message, session)
 }
 
