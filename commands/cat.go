@@ -6,10 +6,6 @@ import (
 	"net/http"
 )
 
-type catQuery struct {
-	File string
-}
-
 // Cat shows an image of a cat
 type Cat struct{}
 
@@ -27,9 +23,9 @@ func (cmd *Cat) execute(ctx *Context, args []string) {
 		ctx.send("Sorry, could not read cat image :( Try again.")
 		return
 	}
-	bodyJSON := map[string]string{
-		"file": "if you see this, it's bc of some weird concurrency issue with Golang",
-	}
+
+	// set map key to something in the beginning so that ctx.send() doesn't complain for some reason
+	bodyJSON := map[string]string{"file": "if you see this, it's bc of some weird concurrency issue with Golang"}
 	json.Unmarshal(inBytes, &bodyJSON)
 	ctx.send(bodyJSON["file"])
 
