@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"time"
 )
 
 type catQuery struct {
@@ -28,10 +27,11 @@ func (cmd *Cat) execute(ctx *Context, args []string) {
 		ctx.send("Sorry, could not read cat image :( Try again.")
 		return
 	}
-	var bodyJSON catQuery
+	bodyJSON := map[string]string{
+		"file": "if you see this, it's bc of some weird concurrency issue with Golang",
+	}
 	json.Unmarshal(inBytes, &bodyJSON)
-	time.Sleep(100 * time.Millisecond)
-	ctx.send(bodyJSON.File)
+	ctx.send(bodyJSON["file"])
 
 }
 
