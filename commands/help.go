@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"strings"
+
 	"../logger"
 )
 
@@ -34,7 +36,14 @@ func (cmd *Help) execute(ctx *Context, args []string) {
 					msg = msg[:len(msg)-2]
 					msg += ")"
 				}
-				msg += "** - " + c.description() + "\n"
+				desc := c.description()
+				if nlIndex := strings.Index(desc, "\n"); nlIndex != -1 {
+					desc = desc[:nlIndex] + "..."
+				}
+				if len(desc) > 100 {
+					desc = desc[:97] + "..."
+				}
+				msg += "** - " + desc + "\n"
 			}
 
 			msg += "\n"

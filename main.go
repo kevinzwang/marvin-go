@@ -82,8 +82,8 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 
 	ignore := commands.Handle(message, session)
 
-	currChan, _ := session.Channel(message.ChannelID)
-	if !ignore && currChan.Type != discordgo.ChannelTypeDM {
+	currChan, err := session.Channel(message.ChannelID)
+	if !ignore && err == nil && currChan.Type != discordgo.ChannelTypeDM {
 		neutralizeSpotifyLink(session, message)
 	}
 }
