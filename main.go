@@ -50,6 +50,8 @@ func main() {
 		&commands.Hug{},
 		&commands.Pat{},
 		&commands.Slap{},
+		&commands.Spotify{},
+		&commands.Ignore{},
 	)
 
 	err = discord.Open()
@@ -78,9 +80,12 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 		return
 	}
 
-	neutralizeSpotifyLink(session, message)
+	ignore := commands.Handle(message, session)
 
-	commands.Handle(message, session)
+	currChan, _ := session.Channel(message.ChannelID)
+	if !ignore && currChan.Type != discordgo.ChannelTypeDM {
+		neutralizeSpotifyLink(session, message)
+	}
 }
 
 func connect(session *discordgo.Session, _ *discordgo.Connect) {
@@ -88,11 +93,11 @@ func connect(session *discordgo.Session, _ *discordgo.Connect) {
 		fmt.Println("=============")
 		usr, _ := session.User("@me")
 		fmt.Printf("Name: %v#%v\n", usr.Username, usr.Discriminator)
-		prefix, ok := yamlutils.GetPrefix("global")
-		if ok {
-			fmt.Printf("Global Prefix: \"%v\"\n", prefix)
-		} else {
+		prefix := yamlutils.GetPrefix("global")
+		if prefix == session.State.User.Mention()+" " {
 			fmt.Printf("Global Prefix: none\n")
+		} else {
+			fmt.Printf("Global Prefix: \"%v\"\n", prefix)
 		}
 		guilds, _ := session.UserGuilds(100, "", "")
 		fmt.Printf("Servers: %v\n", len(guilds))

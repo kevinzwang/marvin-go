@@ -52,12 +52,14 @@ func (ctx *Context) reply(s string) (msg *discordgo.Message, err error) {
 }
 
 func (ctx *Context) wrongNumArgs(cmd string) (msg *discordgo.Message, err error) {
-	msg, err = ctx.reply("Incorrect number of arguments for command `" + cmd + "`. Try `!help " + cmd + "`.")
+	prefix := yamlutils.GetPrefix(msg.ChannelID)
+	msg, err = ctx.reply("Incorrect number of arguments for command `" + cmd + "`. Try `" + prefix + "help " + cmd + "`.")
 	return
 }
 
 func (ctx *Context) wrongUsage(cmd string) (msg *discordgo.Message, err error) {
-	msg, err = ctx.reply("Incorrect usage of command `" + cmd + "`. Try `!help " + cmd + "`.")
+	prefix := yamlutils.GetPrefix(msg.ChannelID)
+	msg, err = ctx.reply("Incorrect usage of command `" + cmd + "`. Try `" + prefix + "help " + cmd + "`.")
 	return
 }
 
@@ -94,11 +96,11 @@ func AddCommand(c Command) {
 }
 
 // Handle calls a command if the message is a command
-func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
+func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) bool {
 	content := msg.Content
 	channel, err := session.Channel(msg.ChannelID)
 	if logger.Error(err, "couldn't get channel") {
-		return
+		return false
 	}
 	isCmd := false
 	fullCmd := ""
@@ -118,40 +120,45 @@ func Handle(msg *discordgo.MessageCreate, session *discordgo.Session) {
 		splitCmd, err := shlex.Split(fullCmd)
 
 		if logger.Error(err, "couldn't parse command") {
-			return
+			return false
 		}
 
 		// yeah my life sucks
 		if len(splitCmd) == 0 {
-			return
+			return false
 		}
 
 		cmdName := strings.ToLower(splitCmd[0])
+		if cmdName == "ignore" || cmdName == "i" {
+			return true
+		}
+
 		args := splitCmd[1:]
 
 		cmd := commands[cmdName]
 		if cmd != nil {
 			if msg.Author.Bot {
 				session.ChannelMessageSend(msg.ChannelID, msg.Author.Mention()+", screw you and your owner.")
-				return
+				return false
 			}
 
 			if cmd.onlyOwner() == true && msg.Author.ID != yamlutils.GetOwnerID() {
 				session.ChannelMessageSend(msg.ChannelID, msg.Author.Mention()+", the command `"+cmdName+"` can only be used by the owner of this bot!")
-				return
+				return false
 			}
 			min, max := cmd.numArgs()
 
 			// if it has a wrong amount of arguments, exit
 			if (len(args) < min && min != -1) || (len(args) > max && max != -1) {
 				session.ChannelMessageSend(msg.ChannelID, msg.Author.Mention()+" Incorrect number of arguments for command `"+cmdName+"`. Try `!help "+cmdName+"`.")
-				return
+				return false
 			}
 
 			go session.ChannelTyping(msg.ChannelID)
 			go cmd.execute(createContext(msg, session, strings.TrimSpace(fullCmd[len(cmdName):])), args)
 		}
 	}
+	return false
 }
 
 func createContext(msg *discordgo.MessageCreate, session *discordgo.Session, content string) (ctx *Context) {
@@ -188,12 +195,10 @@ func getMsgPrefix(msg *discordgo.MessageCreate, session *discordgo.Session) (str
 		return "", false
 	}
 
-	prefix, ok := yamlutils.GetPrefix(channel.GuildID)
+	prefix := yamlutils.GetPrefix(channel.ID)
 
-	if ok {
-		if strings.HasPrefix(msg.Content, prefix) {
-			return prefix, true
-		}
+	if strings.HasPrefix(msg.Content, prefix) {
+		return prefix, true
 	}
 
 	mention := session.State.User.Mention()

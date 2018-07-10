@@ -12,13 +12,13 @@ func (cmd *Prefix) execute(ctx *Context, args []string) {
 	}
 
 	if len(args) == 0 {
-		prefix, _ := yamlutils.GetPrefix(ctx.Guild.ID)
+		prefix := yamlutils.GetPrefix(ctx.Message.ChannelID)
 		ctx.reply("Current server prefix: `" + prefix + "`")
 		return
 	}
 
 	if args[0] == "-g" && len(args) == 1 {
-		prefix, _ := yamlutils.GetPrefix("global")
+		prefix := yamlutils.GetPrefix("global")
 		ctx.reply("Current global prefix: `" + prefix + "`")
 		return
 	}

@@ -7,7 +7,10 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/bwmarrin/discordgo"
+
 	"../logger"
+	"../marvin"
 	"gopkg.in/yaml.v2"
 )
 
@@ -111,22 +114,33 @@ func GetToken() string {
 }
 
 // GetPrefix gets the bot prefix
-func GetPrefix(serverID string) (string, bool) {
-	prefix, err := Get(false, "config", serverID, "prefix")
+func GetPrefix(channelID string) string {
+	if channelID == "global" {
+		prefix, err := Get(false, "config", "global", "prefix")
+		if prefix != nil && err == nil {
+			p, _ := prefix.(string)
+			return p
+		}
+	}
+
+	currChannel, err := marvin.Session().Channel(channelID)
+
+	if err != nil || currChannel.Type != discordgo.ChannelTypeGuildText {
+		return marvin.Session().State.User.Mention() + " "
+	}
+
+	prefix, _ := Get(false, "config", currChannel.GuildID, "prefix")
 
 	if prefix == nil {
-		prefix, err = Get(false, "config", "global", "prefix")
+		prefix, _ = Get(false, "config", "global", "prefix")
 	}
 
-	if logger.Warning(err, "Couldn't get prefix for server.") {
-		return "", false
+	if prefix == nil {
+		prefix = marvin.Session().State.User.Mention() + " "
 	}
 
-	p, ok := prefix.(string)
-	if !ok {
-		return "", false
-	}
-	return p, true
+	p, _ := prefix.(string)
+	return p
 }
 
 // SetPrefix sets the prefix for the specified server
