@@ -38,6 +38,12 @@ type queryMedia struct {
 	CoverImage  struct {
 		Medium string
 	}
+	NextAiringEpisode queryMediaNextAiringEpisode
+}
+
+type queryMediaNextAiringEpisode struct {
+	TimeUntilAiring int
+	Episode         int
 }
 
 type queryMediaRank struct {
@@ -74,6 +80,10 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 				genres
 				coverImage {
 					medium
+				}
+				nextAiringEpisode {
+					timeUntilAiring
+					episode
 				}
 			}
 		}`
@@ -153,6 +163,38 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 		format = m.Format
 	}
 
+	var status string
+	// here we turn the integer for next airing episode to a string for days, hours, and minutes
+	if m.NextAiringEpisode != (queryMediaNextAiringEpisode{}) {
+		if m.NextAiringEpisode.Episode == 1 {
+			status = "Primieres in"
+		} else {
+			status = "Ep " + strconv.Itoa(m.NextAiringEpisode.Episode) + " in"
+		}
+
+		// prevCounted used so that things like 4d 0h 2m will be displayed
+		prevCounted := false
+		remainder := m.NextAiringEpisode.TimeUntilAiring
+
+		// days
+		if remainder/86400 != 0 {
+			status += " " + strconv.Itoa(remainder/86400) + "d"
+			remainder %= 86400
+			prevCounted = true
+		}
+
+		// hours
+		if remainder/3600 != 0 || prevCounted {
+			status += " " + strconv.Itoa(remainder/3600) + "h"
+			remainder %= 3600
+			prevCounted = true
+		}
+
+		status += " " + strconv.Itoa(remainder/60) + "m"
+	} else {
+		status = strings.Title(strings.ToLower(strings.Replace(m.Status, "_", " ", -1)))
+	}
+
 	em := discordgo.MessageEmbed{
 		URL:         m.SiteURL,
 		Title:       m.Title.UserPreferred,
@@ -161,7 +203,7 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 		Color:       0x44b5f0,
 		Fields: []*discordgo.MessageEmbedField{
 			&discordgo.MessageEmbedField{Name: "Format", Value: format, Inline: true},
-			&discordgo.MessageEmbedField{Name: "Status", Value: strings.Title(strings.ToLower(strings.Replace(m.Status, "_", " ", -1))), Inline: true},
+			&discordgo.MessageEmbedField{Name: "Status", Value: status, Inline: true},
 			&discordgo.MessageEmbedField{Name: "Score", Value: strconv.Itoa(m.MeanScore) + "%", Inline: true},
 			&discordgo.MessageEmbedField{Name: "Popularity", Value: "#" + strconv.Itoa(allTimePop), Inline: true},
 			&discordgo.MessageEmbedField{Name: "Genres", Value: genres, Inline: true},
