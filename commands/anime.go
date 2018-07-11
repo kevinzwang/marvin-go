@@ -167,9 +167,9 @@ func (cmd *Anime) execute(ctx *Context, args []string) {
 	// here we turn the integer for next airing episode to a string for days, hours, and minutes
 	if m.NextAiringEpisode != (queryMediaNextAiringEpisode{}) {
 		if m.NextAiringEpisode.Episode == 1 {
-			status = "Primieres in"
+			status = "Primieres:"
 		} else {
-			status = "Ep " + strconv.Itoa(m.NextAiringEpisode.Episode) + " in"
+			status = "Ep " + strconv.Itoa(m.NextAiringEpisode.Episode) + ":"
 		}
 
 		// prevCounted used so that things like 4d 0h 2m will be displayed
